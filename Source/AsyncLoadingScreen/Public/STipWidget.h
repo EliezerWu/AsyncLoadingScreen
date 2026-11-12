@@ -11,9 +11,14 @@
 #include "Widgets/SCompoundWidget.h"
 
 struct FTipSettings;
+class STextBlock;
 
 /**
  * Tip widget
+ *
+ * Fork change: three stacked lines (eyebrow / headline / detail) instead of a
+ * single text block, so the loading tip can match the mockup's 15/28/17px
+ * typography. Only the headline rotates.
  */
 class STipWidget : public SCompoundWidget
 {
@@ -34,9 +39,8 @@ protected:
 	float Interval = 0.0f;
 
 private:
-	// Placeholder widget
-	TSharedRef<SWidget> TipWidget = SNullWidget::NullWidget;
-
+	// Only the headline rotates; eyebrow and detail stay put.
+	TSharedPtr<STextBlock> TipTextBlock;
 
 	TArray<FText> TipText;
 };

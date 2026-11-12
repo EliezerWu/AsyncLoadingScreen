@@ -8,13 +8,28 @@
 
 #include "STipWidget.h"
 #include "LoadingScreenSettings.h"
+#include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 #include "AsyncLoadingScreenLibrary.h"
+
+namespace
+{
+	TSharedRef<STextBlock> MakeTipLine(const FText& Text, const FTextAppearance& Appearance)
+	{
+		return SNew(STextBlock)
+			.ColorAndOpacity(Appearance.ColorAndOpacity)
+			.Font(Appearance.Font)
+			.ShadowOffset(Appearance.ShadowOffset)
+			.ShadowColorAndOpacity(Appearance.ShadowColorAndOpacity)
+			.Justification(Appearance.Justification)
+			.Text(Text);
+	}
+}
 
 int32 STipWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
 {
 	// Update the tip text if Interval > 0 and TipText has more than one element
-	if (Interval > 0.0f && TipText.Num() > 1)
+	if (Interval > 0.0f && TipText.Num() > 1 && TipTextBlock.IsValid())
 	{
 		TotalDeltaTime += Args.GetDeltaTime();
 
@@ -22,7 +37,7 @@ int32 STipWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeome
 		{
 			int32 TipIndex = FMath::RandRange(0, TipText.Num() - 1);
 
-			StaticCastSharedRef<STextBlock>(TipWidget)->SetText(TipText[TipIndex]);
+			TipTextBlock->SetText(TipText[TipIndex]);
 
 			TotalDeltaTime = 0.0f;
 		}
@@ -36,31 +51,66 @@ void STipWidget::Construct(const FArguments& InArgs, const FTipSettings& Setting
 	TipText = Settings.TipText;
 	Interval = Settings.UpdateInterval;
 
-	if (TipText.Num() > 0)
+	if (TipText.Num() == 0)
 	{
-		int32 TipIndex = FMath::RandRange(0, TipText.Num() - 1);
-		
-		if (Settings.bSetDisplayTipTextManually == true)
-		{
-			if (TipText.IsValidIndex(UAsyncLoadingScreenLibrary::GetDisplayTipTextIndex()))
-			{
-				TipIndex = UAsyncLoadingScreenLibrary::GetDisplayTipTextIndex();
-				// A manually chosen tip stays on screen; disable the random interval refresh
-				Interval = 0.0f;
-			}
-		}
+		return;
+	}
 
-		ChildSlot
+	int32 TipIndex = FMath::RandRange(0, TipText.Num() - 1);
+
+	if (Settings.bSetDisplayTipTextManually == true)
+	{
+		if (TipText.IsValidIndex(UAsyncLoadingScreenLibrary::GetDisplayTipTextIndex()))
+		{
+			TipIndex = UAsyncLoadingScreenLibrary::GetDisplayTipTextIndex();
+			// A manually chosen tip stays on screen; disable the random interval refresh
+			Interval = 0.0f;
+		}
+	}
+
+	TSharedRef<SVerticalBox> Column = SNew(SVerticalBox);
+
+	// Eyebrow: small, wide-tracked label above the headline ("TIP").
+	if (!Settings.EyebrowText.IsEmpty())
+	{
+		Column->AddSlot()
+			.AutoHeight()
+			.HAlign(HAlign_Left)
+			.Padding(FMargin(0.0f, 0.0f, 0.0f, FMath::Max(0.0f, Settings.EyebrowSpacing)))
+			[
+				MakeTipLine(Settings.EyebrowText, Settings.EyebrowAppearance)
+			];
+	}
+
+	// Headline: the only line that rotates.
+	Column->AddSlot()
+		.AutoHeight()
+		.HAlign(HAlign_Fill)
 		[
-			TipWidget = SNew(STextBlock)		
+			SAssignNew(TipTextBlock, STextBlock)
 				.ColorAndOpacity(Settings.Appearance.ColorAndOpacity)
 				.Font(Settings.Appearance.Font)
 				.ShadowOffset(Settings.Appearance.ShadowOffset)
 				.ShadowColorAndOpacity(Settings.Appearance.ShadowColorAndOpacity)
 				.Justification(Settings.Appearance.Justification)
 				.WrapTextAt(Settings.TipWrapAt)
-				.Text(TipText[TipIndex])			
+				.Text(TipText[TipIndex])
 		];
-		
+
+	// Detail: quiet second line ("JIANBING FACT · 001 / ...").
+	if (!Settings.DetailText.IsEmpty())
+	{
+		Column->AddSlot()
+			.AutoHeight()
+			.HAlign(HAlign_Left)
+			.Padding(FMargin(0.0f, FMath::Max(0.0f, Settings.DetailSpacing), 0.0f, 0.0f))
+			[
+				MakeTipLine(Settings.DetailText, Settings.DetailAppearance)
+			];
 	}
+
+	ChildSlot
+	[
+		Column
+	];
 }

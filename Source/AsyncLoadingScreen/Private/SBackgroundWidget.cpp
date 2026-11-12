@@ -23,6 +23,13 @@ void SBackgroundWidget::Construct(const FArguments& InArgs, const FBackgroundSet
 	{
 		if (Image != nullptr)
 		{
+			// The loading screen is built during PreLoadMap, where a freshly loaded
+			// texture usually has no RHI resource yet; without this the SImage draws
+			// nothing and only BackgroundColor shows through.
+			if (Image->GetResource() == nullptr)
+			{
+				Image->UpdateResource();
+			}
 			ImageBrushList.Add(FDeferredCleanupSlateBrush::CreateBrush(Image));
 		}
 	}

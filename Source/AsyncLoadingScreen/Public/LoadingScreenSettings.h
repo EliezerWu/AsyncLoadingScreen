@@ -331,6 +331,30 @@ struct ASYNCLOADINGSCREEN_API FTipSettings
 	 */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tip Settings")
 	bool bSetDisplayTipTextManually = false;
+
+	/** Small label above the tip, e.g. "TIP". Leave empty to hide the line. */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tip Settings")
+	FText EyebrowText;
+
+	// Appearance of the eyebrow line
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tip Settings")
+	FTextAppearance EyebrowAppearance;
+
+	/** Vertical gap between the eyebrow line and the tip text, in slate units. */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tip Settings")
+	float EyebrowSpacing = 14.0f;
+
+	/** Quiet second line under the tip, e.g. "JIANBING FACT · 001 / ...". Leave empty to hide it. */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tip Settings")
+	FText DetailText;
+
+	// Appearance of the detail line
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tip Settings")
+	FTextAppearance DetailAppearance;
+
+	/** Vertical gap between the tip text and the detail line, in slate units. */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Tip Settings")
+	float DetailSpacing = 12.0f;
 };
 
 /**
@@ -586,6 +610,31 @@ struct FClassicLayoutSettings
 	/** Background appearance settings for the border widget */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Classic Layout")
 	FSlateBrush BorderBackground;	
+
+	/**
+	 * Texture tile size for the border brush, in slate units. 0 keeps the brush default.
+	 * Needed because FSlateBrush::ImageSize is an FDeprecateSlateVector2D whose X/Y are
+	 * plain floats rather than UPROPERTYs, so it cannot be set from an ini file.
+	 */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Classic Layout")
+	float BorderPatternTile = 0.0f;
+
+	/**
+	 * Fixed height of the paper strip in slate units. 0 keeps the upstream behaviour
+	 * (height driven by content plus padding).
+	 */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Classic Layout")
+	float BorderHeight = 0.0f;
+
+	/**
+	 * Rotation of the border strip in degrees, applied around its top-right corner.
+	 * Only the backdrop is rotated; the tip text and loading widget stay horizontal.
+	 * Positive values tilt the top edge down towards the left, which is what the
+	 * mockup's clip-path polygon(0 12%, 100% 0, 100% 100%, 0 100%) reads.
+	 * 0 keeps the edge flat (upstream behaviour).
+	 */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Classic Layout")
+	float BorderSlantDegrees = 0.0f;
 };
 
 /** Center Layout settings*/
